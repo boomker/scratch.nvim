@@ -30,19 +30,27 @@ local function listDirectoryRecursive(directory)
   return files
 end
 
---- generate abs filepath
----@param filename string
+--- generate directory path with optional UUID subdirectory
 ---@param parentDir string
 ---@param requiresDir boolean
 ---@return string
-local function genFilepath(filename, parentDir, requiresDir)
+local function genDirectoryPath(parentDir, requiresDir)
   if requiresDir then
     local dirName = vim.trim(vim.fn.system("uuidgen"))
-    vim.fn.mkdir(parentDir .. slash .. dirName, "p")
-    return parentDir .. slash .. dirName .. slash .. filename
+    local fullDir = parentDir .. slash .. dirName
+    vim.fn.mkdir(fullDir, "p")
+    return fullDir
   else
-    return parentDir .. slash .. filename
+    return parentDir
   end
+end
+
+--- generate filepath from filename and directory
+---@param filename string
+---@param directory string
+---@return string
+local function getFilepath(filename, directory)
+  return directory .. slash .. filename
 end
 
 ---@param localKeys Scratch.LocalKey[]
@@ -134,7 +142,8 @@ end
 return {
   Slash = Slash,
   listDirectoryRecursive = listDirectoryRecursive,
-  genFilepath = genFilepath,
+  genDirectoryPath = genDirectoryPath,
+  getFilepath = getFilepath,
   setLocalKeybindings = setLocalKeybindings,
   filenameContains = filenameContains,
   getSelectedText = getSelectedText,

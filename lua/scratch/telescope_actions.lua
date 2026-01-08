@@ -30,7 +30,7 @@ function M.delete_item(prompt_bufnr)
       vim.notify("[scratch.nvim] configFilePath cannot be removed", vim.log.levels.WARN)
       return false
     end
-    local config_data = config.getConfig()
+    local config_data = config.get_config()
     local scratch_file_dir = config_data.scratch_file_dir
     local p = Path:new({ scratch_file_dir, file_name, sep = utils.Slash() })
     return _delelte(p)

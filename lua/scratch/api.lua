@@ -3,7 +3,6 @@ local slash = require("scratch.utils").Slash()
 local utils = require("scratch.utils")
 local telescope_status, telescope_builtin = pcall(require, "telescope.builtin")
 local Hooks = require("scratch.hooks")
-local MANUAL_INPUT_OPTION = "MANUAL_INPUT"
 
 ---@class Scratch.ActionOpts
 ---@field window_cmd? Scratch.WindowCmd
@@ -119,29 +118,17 @@ local function get_all_filetypes()
     end
   end
 
-  table.insert(combined_filetypes, MANUAL_INPUT_OPTION)
   return combined_filetypes
 end
 
 ---@param func Scratch.Action
 ---@param opts? Scratch.ActionOpts
 local function select_filetype_then_do(func, opts)
-  local filetypes = get_all_filetypes()
-
-  vim.ui.select(filetypes, {
-    prompt = "Select filetype",
-    format_item = function(item)
-      return item
-    end,
-  }, function(choosedFt)
-    if choosedFt then
-      if choosedFt == MANUAL_INPUT_OPTION then
-        vim.ui.input({ prompt = "Input filetype: " }, function(ft)
-          func(ft, opts)
-        end)
-      else
-        func(choosedFt, opts)
-      end
+  vim.ui.input({
+    prompt = "Select filetype (or type custom): ",
+  }, function(input)
+    if input and input ~= "" then
+      func(input, opts)
     end
   end)
 end
@@ -207,33 +194,6 @@ local function open_scratch_telescope()
   })
 end
 
-local function open_scratch_snacks()
-  local ok, snacks = pcall(require, "snacks")
-  if not ok then
-    utils.log_err("Can't find snacks.nvim, please check your configuration")
-    return
-  end
-
-  -- Check if rg is available
-  if vim.fn.executable("rg") ~= 1 then
-    utils.log_err("Can't find rg executable, please check your configuration")
-    -- Fallback to default snacks behavior
-    snacks.picker.files({
-      cwd = vim.g.scratch_config.scratch_file_dir,
-      prompt = "Scratch Files",
-    })
-    return
-  end
-
-  -- Use rg with sorting by modified time
-  snacks.picker.files({
-    cmd = "rg",
-    args = { "--files", "--sortr", "modified" },
-    cwd = vim.g.scratch_config.scratch_file_dir,
-    prompt = "Scratch Files",
-  })
-end
-
 local function open_scratch_vim_ui()
   local files = get_scratch_files()
   local config_data = vim.g.scratch_config
@@ -266,8 +226,6 @@ local function openScratch()
     open_scratch_telescope()
   elseif config_data.file_picker == "fzflua" then
     open_scratch_fzflua()
-  elseif config_data.file_picker == "snacks" then
-    open_scratch_snacks()
   else
     open_scratch_vim_ui()
   end
